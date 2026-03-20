@@ -1,0 +1,1516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capacity Planner — Sounds Fun</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F5F2EC;
+    --surface: #FFFFFF;
+    --surface2: #EEEBE4;
+    --border: #D6D0C4;
+    --accent: #C8F135;
+    --accent-dark: #a8d010;
+    --text: #0E0E0E;
+    --muted: #7A7570;
+    --green: #2D9B5A;
+    --yellow: #E5A000;
+    --red: #D63C2F;
+    --creative: #6B4EFF;
+    --strategy: #0077CC;
+    --account: #D6590A;
+    --production: #1A9E6E;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Space Mono', monospace; min-height: 100vh; }
+
+  /* NAV */
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 32px; border-bottom: 2px solid var(--text);
+    position: sticky; top: 0; background: var(--bg); z-index: 100;
+  }
+  .logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; letter-spacing: 0.08em; color: var(--text); }
+  .logo span { color: var(--text); background: var(--accent); padding: 0 4px; }
+  .nav-tabs { display: flex; gap: 2px; }
+  .nav-tab {
+    padding: 7px 16px; border-radius: 0; border: none; cursor: pointer;
+    font-family: 'Space Mono', monospace; font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase;
+    background: transparent; color: var(--muted); transition: all 0.12s;
+  }
+  .nav-tab:hover { color: var(--text); background: var(--surface2); }
+  .nav-tab.active { background: var(--text); color: var(--accent); font-weight: 700; }
+  .nav-right { display: flex; gap: 10px; align-items: center; }
+
+  /* BTN */
+  .btn {
+    padding: 8px 16px; border-radius: 0; border: 2px solid var(--text);
+    font-family: 'Space Mono', monospace; font-size: 0.68rem; cursor: pointer; text-transform: uppercase; letter-spacing: 0.06em;
+    background: var(--surface); color: var(--text); transition: all 0.12s;
+  }
+  .btn:hover { background: var(--text); color: var(--bg); }
+  .btn.primary { background: var(--accent); color: var(--text); border-color: var(--text); font-weight: 700; }
+  .btn.primary:hover { background: var(--accent-dark); }
+  .btn.danger { border-color: var(--red); color: var(--red); background: transparent; }
+  .btn.danger:hover { background: var(--red); color: #fff; }
+  .btn.small { padding: 4px 10px; font-size: 0.62rem; }
+
+  /* LAYOUT */
+  .page { display: none; padding: 32px; max-width: 1400px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  /* SECTION HEADER */
+  .section-header {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 28px; padding-bottom: 16px; border-bottom: 2px solid var(--text);
+  }
+  .section-title { font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; letter-spacing: 0.06em; }
+  .section-sub { color: var(--muted); font-size: 0.68rem; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface); border: 2px solid var(--text);
+    border-radius: 0; padding: 20px;
+  }
+
+  /* STAT ROW */
+  .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin-bottom: 28px; border: 2px solid var(--text); }
+  .stat-card {
+    background: var(--surface); border-right: 2px solid var(--text);
+    padding: 20px 24px;
+  }
+  .stat-card:last-child { border-right: none; }
+  .stat-label { font-size: 0.62rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; font-family: 'Space Mono', monospace; }
+  .stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 3rem; letter-spacing: 0.04em; line-height: 1; }
+  .stat-value.accent { color: var(--text); background: var(--accent); display: inline-block; padding: 0 6px; }
+  .stat-value.warn { color: var(--yellow); }
+  .stat-value.danger { color: var(--red); }
+
+  /* HEATMAP */
+  .heatmap-wrap { overflow-x: auto; }
+  .heatmap-table { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
+  .heatmap-table th {
+    padding: 10px 12px; text-align: left; color: var(--muted);
+    border-bottom: 2px solid var(--text); font-weight: 700; font-family: 'Space Mono', monospace;
+    letter-spacing: 0.06em; white-space: nowrap; text-transform: uppercase; font-size: 0.62rem;
+  }
+  .heatmap-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .heatmap-table tr:last-child td { border-bottom: none; }
+  .heatmap-table tr:hover td { background: var(--surface2); }
+  .person-name { font-weight: 700; font-family: 'Inter', sans-serif; }
+  .dept-badge {
+    display: inline-block; padding: 2px 8px; border-radius: 0;
+    font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700;
+  }
+  .dept-Creative { background: #EDE9FF; color: var(--creative); border: 1.5px solid var(--creative); }
+  .dept-Strategy { background: #E0F0FF; color: var(--strategy); border: 1.5px solid var(--strategy); }
+  .dept-Accounts { background: #FFF0E6; color: var(--account); border: 1.5px solid var(--account); }
+  .dept-Production { background: #E6F8F2; color: var(--production); border: 1.5px solid var(--production); }
+
+  .cell-heat {
+    min-width: 72px; border-radius: 0; padding: 5px 10px;
+    text-align: center; font-size: 0.68rem; font-weight: 700; font-family: 'Space Mono', monospace;
+  }
+  .heat-green { background: #D4F5E4; color: var(--green); border: 1.5px solid var(--green); }
+  .heat-yellow { background: #FFF3CD; color: var(--yellow); border: 1.5px solid var(--yellow); }
+  .heat-red { background: #FFE8E6; color: var(--red); border: 1.5px solid var(--red); }
+  .heat-empty { background: var(--surface2); color: var(--muted); border: 1.5px solid var(--border); }
+
+  /* PROJECTS */
+  .projects-grid { display: grid; gap: 0; border: 2px solid var(--text); }
+  .project-row {
+    background: var(--surface); border-bottom: 2px solid var(--text);
+    padding: 18px 22px;
+    display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto;
+    align-items: center; gap: 16px; transition: background 0.12s;
+  }
+  .project-row:last-child { border-bottom: none; }
+  .project-row:hover { background: var(--surface2); }
+  .project-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; letter-spacing: 0.04em; }
+  .project-client { font-size: 0.68rem; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .date-range { font-size: 0.68rem; color: var(--muted); font-family: 'Space Mono', monospace; }
+  .status-badge {
+    display: inline-block; padding: 3px 10px; border-radius: 0;
+    font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700;
+  }
+  .status-active { background: #D4F5E4; color: var(--green); border: 1.5px solid var(--green); }
+  .status-pitched { background: #E0F0FF; color: var(--strategy); border: 1.5px solid var(--strategy); }
+  .status-complete { background: var(--surface2); color: var(--muted); border: 1.5px solid var(--border); }
+  .members-list { display: flex; flex-wrap: wrap; gap: 4px; }
+  .member-chip {
+    background: var(--surface2); border: 1.5px solid var(--border);
+    border-radius: 0; padding: 2px 7px; font-size: 0.62rem; color: var(--muted); font-family: 'Space Mono', monospace;
+  }
+
+  /* TEAM */
+  .team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0; border: 2px solid var(--text); }
+  .team-card {
+    background: var(--surface); border-right: 2px solid var(--text); border-bottom: 2px solid var(--text);
+    padding: 20px;
+  }
+  .team-card:hover { background: var(--surface2); }
+  .team-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+  .team-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; letter-spacing: 0.04em; }
+  .team-role { font-size: 0.68rem; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .capacity-bar-wrap { margin-top: 12px; }
+  .capacity-bar-label { display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--muted); margin-bottom: 6px; font-family: 'Space Mono', monospace; }
+  .capacity-bar { height: 5px; background: var(--surface2); border: 1px solid var(--border); overflow: hidden; }
+  .capacity-fill { height: 100%; transition: width 0.4s; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(14,14,14,0.7);
+    z-index: 200; align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bg); border: 2px solid var(--text);
+    border-radius: 0; padding: 32px; width: 860px; max-width: 97vw;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; letter-spacing: 0.06em; margin-bottom: 22px; }
+  .form-row { margin-bottom: 16px; }
+  .form-label { font-size: 0.62rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; display: block; font-weight: 700; }
+  .form-input {
+    width: 100%; padding: 9px 12px; background: var(--surface);
+    border: 2px solid var(--border); border-radius: 0;
+    color: var(--text); font-family: 'Space Mono', monospace; font-size: 0.78rem;
+    outline: none; transition: border-color 0.12s;
+  }
+  .form-input:focus { border-color: var(--text); }
+  .form-input option { background: var(--surface); }
+  .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; padding-top: 16px; border-top: 2px solid var(--border); }
+
+  /* MONDAY */
+  .monday-panel {
+    background: var(--surface); border: 2px solid var(--text);
+    padding: 24px; margin-bottom: 20px;
+  }
+  .monday-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; letter-spacing: 0.05em; margin-bottom: 6px; }
+  .monday-sub { font-size: 0.68rem; color: var(--muted); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .monday-url-row { display: flex; gap: 10px; align-items: center; }
+  .monday-url-input { flex: 1; }
+  .monday-embed { width: 100%; height: 500px; border: 2px solid var(--text); margin-top: 16px; }
+
+  /* UPLOAD */
+  .upload-zone {
+    border: 2px dashed var(--border); padding: 40px; text-align: center; cursor: pointer; transition: all 0.12s;
+  }
+  .upload-zone:hover, .upload-zone.drag { border-color: var(--text); background: var(--surface2); }
+  .upload-icon { font-size: 2.5rem; margin-bottom: 12px; }
+  .upload-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; letter-spacing: 0.05em; margin-bottom: 6px; }
+  .upload-sub { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* MONTH SELECTOR */
+  .month-nav { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+  .month-chips { display: flex; gap: 4px; flex-wrap: wrap; }
+  .month-chip {
+    padding: 5px 12px; border-radius: 0; border: 2px solid var(--border);
+    font-size: 0.65rem; cursor: pointer; background: transparent; color: var(--muted);
+    font-family: 'Space Mono', monospace; transition: all 0.12s; text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .month-chip:hover { border-color: var(--text); color: var(--text); }
+  .month-chip.active { background: var(--accent); color: var(--text); border-color: var(--text); font-weight: 700; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+
+  /* EMPTY STATE */
+  .empty { text-align: center; padding: 60px 20px; color: var(--muted); font-size: 0.8rem; }
+  .empty-icon { font-size: 2rem; margin-bottom: 12px; }
+
+  /* ASSIGNMENTS SECTION */
+  .assign-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+  .assign-row { display: flex; gap: 8px; align-items: center; }
+
+  /* dept filter */
+  .filter-row { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; }
+  .filter-chip {
+    padding: 5px 14px; border-radius: 0; border: 2px solid var(--border);
+    font-size: 0.65rem; cursor: pointer; background: transparent; color: var(--muted);
+    font-family: 'Space Mono', monospace; transition: all 0.12s; text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .filter-chip:hover { border-color: var(--text); color: var(--text); }
+  .filter-chip.active { border-color: var(--text); color: var(--text); background: var(--surface2); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<!-- PASSWORD GATE -->
+<div id="password-gate" style="
+  position:fixed;inset:0;background:var(--bg);z-index:9999;
+  display:flex;align-items:center;justify-content:center;
+">
+  <div style="text-align:center;max-width:380px;width:90%;">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:3.5rem;letter-spacing:0.06em;margin-bottom:4px;">SOUNDS<span style="background:var(--accent);padding:0 6px;">FUN</span></div>
+    <div style="font-family:'Space Mono',monospace;font-size:0.68rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:40px;">Capacity Planner</div>
+    <div style="border:2px solid var(--text);background:var(--surface);padding:32px;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:0.06em;margin-bottom:20px;">ENTER PASSWORD</div>
+      <input type="password" id="gate-input" placeholder="Password"
+        style="width:100%;padding:12px;background:var(--bg);border:2px solid var(--border);font-family:'Space Mono',monospace;font-size:0.85rem;color:var(--text);outline:none;margin-bottom:10px;text-align:center;letter-spacing:0.1em;"
+        onkeydown="if(event.key==='Enter')checkPassword()">
+      <div id="gate-error" style="font-size:0.68rem;color:var(--red);min-height:18px;margin-bottom:10px;font-family:'Space Mono',monospace;letter-spacing:0.05em;"></div>
+      <button onclick="checkPassword()" style="
+        width:100%;padding:12px;background:var(--accent);border:2px solid var(--text);
+        font-family:'Space Mono',monospace;font-size:0.75rem;font-weight:700;
+        text-transform:uppercase;letter-spacing:0.1em;cursor:pointer;
+      ">ENTER →</button>
+    </div>
+  </div>
+</div>
+
+<nav>
+  <div class="logo">SOUNDS<span>FUN</span> · CAPACITY</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('overview')">Overview</button>
+    <button class="nav-tab" onclick="showPage('heatmap')">Heatmap</button>
+    <button class="nav-tab" onclick="showPage('projects')">Projects</button>
+    <button class="nav-tab" onclick="showPage('team')">Team</button>
+    <button class="nav-tab" onclick="showPage('monday')">Monday.com</button>
+  </div>
+  <div class="nav-right">
+    <span id="sync-indicator" style="font-size:0.62rem;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:0.05em;cursor:pointer;" onclick="openModal('sheets')">○ Sheets (not set)</span>
+    <button class="btn small" onclick="openModal('sheets')">⚙ Connect Sheets</button>
+    <button class="btn" id="api-key-btn" onclick="openModal('apikey')" title="Set Anthropic API Key">⚙ API Key</button>
+    <button class="btn" onclick="document.getElementById('pdfInput').click()">↑ Import Staff PDF</button>
+    <input type="file" id="pdfInput" accept=".pdf" style="display:none" onchange="handlePDF(event)">
+  </div>
+</nav>
+
+<!-- OVERVIEW PAGE -->
+<div class="page active" id="page-overview">
+  <div class="section-header">
+    <div>
+      <div class="section-title">Capacity Overview</div>
+      <div class="section-sub">Next 6 months · 160 hrs/person/month baseline</div>
+    </div>
+    <button class="btn primary" onclick="openModal('project')">+ New Project</button>
+  </div>
+
+  <div class="stat-row" id="stat-row"></div>
+
+  <div class="month-nav">
+    <span style="font-size:0.7rem;color:var(--muted)">VIEW MONTH:</span>
+    <div class="month-chips" id="month-chips"></div>
+  </div>
+
+  <div class="card">
+    <div class="heatmap-wrap">
+      <table class="heatmap-table" id="overview-table">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- HEATMAP PAGE -->
+<div class="page" id="page-heatmap">
+  <div class="section-header">
+    <div>
+      <div class="section-title">Utilization Heatmap</div>
+      <div class="section-sub">All members · All months</div>
+    </div>
+  </div>
+  <div class="filter-row" id="heatmap-filters"></div>
+  <div class="card">
+    <div class="heatmap-wrap">
+      <table class="heatmap-table" id="heatmap-table">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- PROJECTS PAGE -->
+<div class="page" id="page-projects">
+  <div class="section-header">
+    <div>
+      <div class="section-title">Projects</div>
+      <div class="section-sub" id="project-count"></div>
+    </div>
+    <button class="btn primary" onclick="openModal('project')">+ New Project</button>
+  </div>
+  <div class="filter-row">
+    <button class="filter-chip active" onclick="filterProjects('all',this)">All</button>
+    <button class="filter-chip" onclick="filterProjects('active',this)">Active</button>
+    <button class="filter-chip" onclick="filterProjects('pitched',this)">Pitched</button>
+    <button class="filter-chip" onclick="filterProjects('complete',this)">Complete</button>
+  </div>
+  <div class="projects-grid" id="projects-list"></div>
+</div>
+
+<!-- TEAM PAGE -->
+<div class="page" id="page-team">
+  <div class="section-header">
+    <div>
+      <div class="section-title">Team Members</div>
+      <div class="section-sub" id="team-count"></div>
+    </div>
+    <button class="btn primary" onclick="openModal('member')">+ Add Member</button>
+  </div>
+  <div class="filter-row" id="team-filters"></div>
+  <div class="team-grid" id="team-list"></div>
+</div>
+
+<!-- MONDAY PAGE -->
+<div class="page" id="page-monday">
+  <div class="section-header">
+    <div>
+      <div class="section-title">Monday.com</div>
+      <div class="section-sub">Connect your board for a side-by-side view</div>
+    </div>
+  </div>
+
+  <div class="monday-panel">
+    <div class="monday-title">Board Embed</div>
+    <div class="monday-sub">Paste your Monday.com board URL to embed it alongside your capacity data.</div>
+    <div class="monday-url-row">
+      <input type="text" class="form-input monday-url-input" id="monday-url" placeholder="https://yourcompany.monday.com/boards/123456789">
+      <button class="btn primary" onclick="embedMonday()">Embed</button>
+      <button class="btn" onclick="openMonday()">↗ Open in Monday</button>
+    </div>
+    <div id="monday-embed-wrap"></div>
+  </div>
+
+  <div class="monday-panel">
+    <div class="monday-title">Quick Links</div>
+    <div class="monday-sub">Common Monday.com actions</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="btn" onclick="openMonday('https://monday.com')">Open Monday.com</button>
+      <button class="btn" onclick="exportCSV()">↓ Export CSV for Monday</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-project">
+  <div class="modal">
+    <div class="modal-title" id="project-modal-title">New Project</div>
+    <div class="form-row">
+      <label class="form-label">Project Name</label>
+      <input type="text" class="form-input" id="proj-name" placeholder="e.g. Nike Summer Campaign">
+    </div>
+    <div class="form-grid-2">
+      <div class="form-row">
+        <label class="form-label">Start Date</label>
+        <input type="date" class="form-input" id="proj-start">
+      </div>
+      <div class="form-row">
+        <label class="form-label">End Date</label>
+        <input type="date" class="form-input" id="proj-end">
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Status</label>
+      <select class="form-input" id="proj-status">
+        <option value="pitched">Pitched</option>
+        <option value="active">Active</option>
+        <option value="complete">Complete</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Assign Team Members & Monthly Hours</label>
+      <div id="proj-members-assign" style="margin-top:6px;"></div>
+      <div id="no-members-note" style="font-size:0.7rem;color:var(--muted);margin-top:6px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('project')">Cancel</button>
+      <button class="btn primary" onclick="saveProject()">Save Project</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-member">
+  <div class="modal">
+    <div class="modal-title" id="member-modal-title">Add Team Member</div>
+    <div class="form-row">
+      <label class="form-label">Full Name</label>
+      <input type="text" class="form-input" id="mem-name" placeholder="e.g. Jordan Lee">
+    </div>
+    <div class="form-row">
+      <label class="form-label">Role / Title</label>
+      <input type="text" class="form-input" id="mem-role" placeholder="e.g. Senior Art Director">
+    </div>
+    <div class="form-row">
+      <label class="form-label">Department</label>
+      <select class="form-input" id="mem-dept">
+        <option value="Creative">Creative</option>
+        <option value="Strategy">Strategy</option>
+        <option value="Accounts">Accounts</option>
+        <option value="Production">Production</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Monthly Capacity (hrs)</label>
+      <input type="number" class="form-input" id="mem-cap" value="160" min="0" max="300">
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('member')">Cancel</button>
+      <button class="btn primary" onclick="saveMember()">Save Member</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-sheets">
+  <div class="modal" style="width:600px;">
+    <div class="modal-title">Connect Google Sheets</div>
+    <p style="font-size:0.75rem;color:var(--muted);margin-bottom:20px;line-height:1.7;">
+      This connects the app to a shared Google Sheet so your whole team reads and writes the same live data. Setup takes about 3 minutes.
+    </p>
+
+    <div style="background:var(--surface2);border:2px solid var(--border);padding:18px;margin-bottom:20px;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:0.05em;margin-bottom:12px;">SETUP STEPS</div>
+      <ol style="font-size:0.72rem;line-height:2;color:var(--text);padding-left:18px;">
+        <li>Open your Google Sheet → click <strong>Extensions → Apps Script</strong></li>
+        <li>Delete any existing code, paste the Apps Script below</li>
+        <li>Click <strong>Run</strong> once on doGet to authorize</li>
+        <li>Click <strong>Deploy → New Deployment → Web App</strong></li>
+        <li>Set <em>Execute as</em>: <strong>Me</strong> · <em>Who has access</em>: <strong>Anyone</strong></li>
+        <li>Click Deploy → copy the <strong>Web App URL</strong> → paste below</li>
+      </ol>
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">Apps Script Code — paste this into script.google.com</label>
+      <textarea id="apps-script-code" readonly style="width:100%;height:160px;background:var(--text);color:var(--accent);font-family:'Space Mono',monospace;font-size:0.62rem;padding:12px;border:2px solid var(--text);resize:none;line-height:1.5;" onclick="this.select()">const SHEET_NAME = 'CapacityData';
+
+function getSheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) sheet = ss.insertSheet(SHEET_NAME);
+  return sheet;
+}
+
+function doGet(e) {
+  try {
+    const callback = e.parameter.callback;
+    const sheet = getSheet();
+    const val = sheet.getRange(1,1).getValue();
+    const json = JSON.stringify({ status: 'ok', data: val || null });
+    if (callback) {
+      return ContentService.createTextOutput(callback + '(' + json + ')')
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
+    return ContentService.createTextOutput(json)
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService.createTextOutput(
+      JSON.stringify({ status: 'error', error: err.toString() })
+    ).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doPost(e) {
+  try {
+    const body = JSON.parse(e.postData.contents);
+    if (body.action === 'save') {
+      const sheet = getSheet();
+      sheet.getRange(1,1).setValue(JSON.stringify(body.data));
+      return ContentService.createTextOutput(JSON.stringify({ status: 'ok' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+  } catch(err) {
+    return ContentService.createTextOutput(
+      JSON.stringify({ status: 'error', error: err.toString() })
+    ).setMimeType(ContentService.MimeType.JSON);
+  }
+}</textarea>
+      <button class="btn small" style="margin-top:6px;" onclick="document.getElementById('apps-script-code').select();document.execCommand('copy');this.textContent='✓ Copied!';setTimeout(()=>this.textContent='Copy Code',1500)">Copy Code</button>
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">Web App URL (from Step 5)</label>
+      <input type="text" class="form-input" id="sheets-url-input" placeholder="https://script.google.com/macros/s/…/exec">
+    </div>
+    <div id="sheets-status" style="font-size:0.72rem;min-height:20px;margin-bottom:8px;"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('sheets')">Cancel</button>
+      <button class="btn" onclick="testSheetsConnection()">Test Connection</button>
+      <button class="btn primary" onclick="saveSheetsUrl()">Save & Sync</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-pdf">
+  <div class="modal">
+    <div class="modal-title">Import Staff PDF</div>
+    <p style="font-size:0.75rem;color:var(--muted);margin-bottom:18px;line-height:1.6;">
+      Upload a staff plan PDF — Claude will read it and automatically extract team members, departments, roles, and capacity hours.
+    </p>
+    <div id="pdf-status" style="font-size:0.75rem;min-height:24px;margin-bottom:8px;"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('pdf')">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-apikey">
+  <div class="modal" style="width:480px;">
+    <div class="modal-title">Anthropic API Key</div>
+    <p style="font-size:0.75rem;color:var(--muted);margin-bottom:18px;line-height:1.6;font-family:'Space Mono',monospace;">
+      Required to use <strong style="color:var(--text)">Import Staff PDF</strong> outside of Claude.ai.<br><br>
+      Get your key at <strong style="color:var(--text)">console.anthropic.com</strong> → API Keys. Your key is saved locally in your browser only — never sent anywhere except directly to Anthropic.
+    </p>
+    <div class="form-row">
+      <label class="form-label">API Key</label>
+      <input type="password" class="form-input" id="apikey-input" placeholder="sk-ant-…" autocomplete="off">
+    </div>
+    <div id="apikey-status" style="font-size:0.72rem;min-height:18px;margin-top:4px;"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('apikey')">Cancel</button>
+      <button class="btn danger small" onclick="clearApiKey()">Clear</button>
+      <button class="btn primary" onclick="saveApiKey()">Save Key</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── PASSWORD GATE ────────────────────────────────────────────────────────────
+const APP_PASSWORD = 'sweepthefloors';
+const AUTH_KEY = 'capplan_auth';
+
+function checkPassword() {
+  const val = document.getElementById('gate-input').value;
+  if (val === APP_PASSWORD) {
+    sessionStorage.setItem(AUTH_KEY, '1');
+    document.getElementById('password-gate').style.display = 'none';
+  } else {
+    const err = document.getElementById('gate-error');
+    err.textContent = 'Incorrect password. Try again.';
+    document.getElementById('gate-input').value = '';
+    document.getElementById('gate-input').focus();
+    setTimeout(() => err.textContent = '', 2500);
+  }
+}
+
+// Auto-unlock if already authenticated this session
+if (sessionStorage.getItem(AUTH_KEY) === '1') {
+  document.addEventListener('DOMContentLoaded', () => {
+    const gate = document.getElementById('password-gate');
+    if (gate) gate.style.display = 'none';
+  });
+}
+
+let state = {
+  members: [
+    { id: 1, name: "Alex Rivera", role: "Creative Director", dept: "Creative", cap: 160 },
+    { id: 2, name: "Morgan Chen", role: "Sr. Strategist", dept: "Strategy", cap: 160 },
+    { id: 3, name: "Jamie Park", role: "Account Manager", dept: "Accounts", cap: 160 },
+    { id: 4, name: "Taylor Brooks", role: "Producer", dept: "Production", cap: 160 },
+    { id: 5, name: "Sam Okafor", role: "Art Director", dept: "Creative", cap: 160 },
+  ],
+  projects: [
+    { id: 1, name: "Brand Refresh", start: "2026-03-01", end: "2026-06-30", status: "active",
+      assignments: [{ memberId: 1, role: "CD", hoursPerMonth: 40 }, { memberId: 5, role: "AD", hoursPerMonth: 60 }] },
+    { id: 2, name: "Q3 Campaign", start: "2026-05-01", end: "2026-08-31", status: "pitched",
+      assignments: [{ memberId: 2, role: "Lead Strategist", hoursPerMonth: 50 }, { memberId: 3, role: "AM", hoursPerMonth: 30 }] },
+    { id: 3, name: "Product Launch", start: "2026-04-01", end: "2026-05-31", status: "active",
+      assignments: [{ memberId: 4, role: "Producer", hoursPerMonth: 80 }, { memberId: 1, role: "CD", hoursPerMonth: 20 }] },
+  ],
+  nextMemberId: 6,
+  nextProjectId: 4,
+  editingMemberId: null,
+  activeMonthIdx: 0,
+  heatmapDeptFilter: 'all',
+  teamDeptFilter: 'all',
+  projectFilter: 'all',
+  editingProjectId: null,
+};
+
+// ─── MONTHS ──────────────────────────────────────────────────────────────────
+function getMonths(n = 12) {
+  const months = [];
+  const now = new Date();
+  for (let i = 0; i < n; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    months.push({ key: `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`, label: d.toLocaleString('default',{month:'short',year:'2-digit'}) });
+  }
+  return months;
+}
+// Recalculate fresh on every page load so months always roll forward automatically
+let MONTHS = getMonths(12);
+
+function monthInProject(proj, monthKey) {
+  if (!proj.start || !proj.end) return false;
+  const [y,m] = monthKey.split('-').map(Number);
+  const mStart = new Date(y, m-1, 1);
+  const mEnd = new Date(y, m, 0);
+  const pStart = new Date(proj.start);
+  const pEnd = new Date(proj.end);
+  return pStart <= mEnd && pEnd >= mStart;
+}
+
+function allocatedHrsForMember(memberId, monthKey) {
+  return state.projects.filter(p => monthInProject(p, monthKey))
+    .flatMap(p => p.assignments.filter(a => a.memberId === memberId))
+    .reduce((s, a) => {
+      // Use per-month value if available, otherwise fall back to flat hoursPerMonth
+      const hrs = (a.monthlyHours && a.monthlyHours[monthKey] != null)
+        ? a.monthlyHours[monthKey]
+        : (a.hoursPerMonth || 0);
+      return s + hrs;
+    }, 0);
+}
+
+// ─── HEAT CLASS ──────────────────────────────────────────────────────────────
+function heatClass(pct) {
+  if (pct === 0) return 'heat-empty';
+  if (pct < 70) return 'heat-green';
+  if (pct < 90) return 'heat-yellow';
+  return 'heat-red';
+}
+
+// ─── RENDER OVERVIEW ─────────────────────────────────────────────────────────
+function renderStats() {
+  const totalMembers = state.members.length;
+  const activeProjects = state.projects.filter(p => p.status === 'active').length;
+  const mk = MONTHS[state.activeMonthIdx].key;
+  const overloaded = state.members.filter(m => {
+    const alloc = allocatedHrsForMember(m.id, mk);
+    return alloc > m.cap;
+  }).length;
+  const avgUtil = state.members.length
+    ? Math.round(state.members.reduce((s,m) => s + allocatedHrsForMember(m.id, mk) / m.cap * 100, 0) / state.members.length)
+    : 0;
+  document.getElementById('stat-row').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Team Members</div><div class="stat-value accent">${totalMembers}</div></div>
+    <div class="stat-card"><div class="stat-label">Active Projects</div><div class="stat-value">${activeProjects}</div></div>
+    <div class="stat-card"><div class="stat-label">Avg Utilization (${MONTHS[state.activeMonthIdx].label})</div><div class="stat-value ${avgUtil>90?'danger':avgUtil>70?'warn':''}">${avgUtil}%</div></div>
+    <div class="stat-card"><div class="stat-label">Overloaded Members</div><div class="stat-value ${overloaded>0?'danger':''}">${overloaded}</div></div>
+  `;
+}
+
+function renderMonthChips() {
+  document.getElementById('month-chips').innerHTML = MONTHS.map((m, i) =>
+    `<button class="month-chip ${i===state.activeMonthIdx?'active':''}" onclick="selectMonth(${i})">${m.label}</button>`
+  ).join('');
+}
+
+function selectMonth(i) {
+  state.activeMonthIdx = i;
+  renderAll();
+}
+
+function renderOverviewTable() {
+  const mk = MONTHS[state.activeMonthIdx].key;
+  const thead = document.querySelector('#overview-table thead');
+  const tbody = document.querySelector('#overview-table tbody');
+  thead.innerHTML = `<tr>
+    <th>Member</th><th>Department</th><th>Role</th>
+    <th>Capacity</th><th>Allocated</th><th>Remaining</th><th>Utilization</th>
+    <th>Projects</th>
+  </tr>`;
+  tbody.innerHTML = state.members.map(m => {
+    const alloc = allocatedHrsForMember(m.id, mk);
+    const remain = m.cap - alloc;
+    const pct = Math.round(alloc / m.cap * 100);
+    const projs = state.projects.filter(p => monthInProject(p, mk) && p.assignments.some(a => a.memberId === m.id));
+    const deptKey = m.dept.replace(/\s+/g,'');
+    return `<tr>
+      <td class="person-name">${m.name}</td>
+      <td><span class="dept-badge dept-${deptKey}">${m.dept}</span></td>
+      <td style="color:var(--muted)">${m.role}</td>
+      <td>${m.cap}h</td>
+      <td>${alloc}h</td>
+      <td style="color:${remain<0?'var(--red)':remain<40?'var(--yellow)':'var(--green)'}">${remain}h</td>
+      <td><span class="cell-heat ${heatClass(pct)}">${pct}%</span></td>
+      <td><div style="display:flex;flex-wrap:wrap;gap:4px;min-width:160px;">${projs.map(p=>`<span class="member-chip">${p.name}</span>`).join('')}</div></td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="8" class="empty"><div class="empty-icon">👥</div>No team members yet. Add members on the Team tab.</td></tr>`;
+}
+
+// ─── RENDER HEATMAP ──────────────────────────────────────────────────────────
+function renderHeatmapFilters() {
+  const depts = ['all', 'Creative', 'Strategy', 'Accounts', 'Production'];
+  document.getElementById('heatmap-filters').innerHTML = depts.map(d =>
+    `<button class="filter-chip ${state.heatmapDeptFilter===d?'active':''}" onclick="filterHeatmap('${d}',this)">${d==='all'?'All Depts':d}</button>`
+  ).join('');
+}
+
+function filterHeatmap(dept, el) {
+  state.heatmapDeptFilter = dept;
+  document.querySelectorAll('#heatmap-filters .filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderHeatmap();
+}
+
+function renderHeatmap() {
+  const members = state.heatmapDeptFilter === 'all'
+    ? state.members
+    : state.members.filter(m => m.dept === state.heatmapDeptFilter);
+  const thead = document.querySelector('#heatmap-table thead');
+  const tbody = document.querySelector('#heatmap-table tbody');
+  thead.innerHTML = `<tr><th>Member</th><th>Dept</th>${MONTHS.map(m=>`<th>${m.label}</th>`).join('')}</tr>`;
+  tbody.innerHTML = members.map(m => {
+    const deptKey = m.dept.replace(/\s+/g,'');
+    const cells = MONTHS.map(mo => {
+      const alloc = allocatedHrsForMember(m.id, mo.key);
+      const pct = Math.round(alloc / m.cap * 100);
+      return `<td><span class="cell-heat ${heatClass(pct)}">${alloc>0?pct+'%':'—'}</span></td>`;
+    }).join('');
+    return `<tr><td class="person-name">${m.name}</td><td><span class="dept-badge dept-${deptKey}">${m.dept}</span></td>${cells}</tr>`;
+  }).join('') || `<tr><td colspan="${2+MONTHS.length}" class="empty">No members match filter.</td></tr>`;
+}
+
+// ─── RENDER PROJECTS ─────────────────────────────────────────────────────────
+function filterProjects(f, el) {
+  state.projectFilter = f;
+  document.querySelectorAll('.filter-row .filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderProjects();
+}
+
+function renderProjects() {
+  const projs = state.projectFilter === 'all'
+    ? state.projects
+    : state.projects.filter(p => p.status === state.projectFilter);
+  document.getElementById('project-count').textContent = `${projs.length} project${projs.length!==1?'s':''}`;
+  document.getElementById('projects-list').innerHTML = projs.map(p => {
+    const members = p.assignments.map(a => {
+      const m = state.members.find(x => x.id === a.memberId);
+      if (!m) return '';
+      const hasMonthly = a.monthlyHours && Object.keys(a.monthlyHours).length > 0;
+      const hoursLabel = hasMonthly
+        ? Object.entries(a.monthlyHours).sort().map(([k,v]) => {
+            const [y, mo] = k.split('-');
+            const label = new Date(+y, +mo-1, 1).toLocaleString('default',{month:'short'});
+            return `${label}:${v}h`;
+          }).join(' · ')
+        : `${a.hoursPerMonth || 0}h/mo`;
+      return `<span class="member-chip">${m.name}${a.role ? ' · '+a.role : ''} · ${hoursLabel}</span>`;
+    }).join('');
+    return `<div class="project-row">
+      <div>
+        <div class="project-name">${p.name}</div>
+        <div class="members-list" style="margin-top:8px;">${members}</div>
+      </div>
+      <div class="date-range">${fmtDate(p.start)}<br>→ ${fmtDate(p.end)}</div>
+      <div><span class="status-badge status-${p.status}">${p.status}</span></div>
+      <div class="members-list"></div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn small" onclick="editProject(${p.id})">Edit</button>
+        <button class="btn small danger" onclick="deleteProject(${p.id})">×</button>
+      </div>
+    </div>`;
+  }).join('') || `<div class="empty"><div class="empty-icon">📁</div>No projects yet. Click "+ New Project" to get started.</div>`;
+}
+
+function fmtDate(d) {
+  if (!d) return '—';
+  const [y,m,day] = d.split('-');
+  return `${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m-1]} ${day}, ${y}`;
+}
+
+function deleteProject(id) {
+  state.projects = state.projects.filter(p => p.id !== id);
+  saveState();
+  renderAll();
+}
+
+function editProject(id) {
+  state.editingProjectId = id;
+  const p = state.projects.find(x => x.id === id);
+  document.getElementById('project-modal-title').textContent = 'Edit Project';
+  document.getElementById('proj-name').value = p.name;
+  document.getElementById('proj-start').value = p.start;
+  document.getElementById('proj-end').value = p.end;
+  document.getElementById('proj-status').value = p.status;
+  buildAssignSection(p.assignments);
+  openModal('project');
+}
+
+// ─── RENDER TEAM ─────────────────────────────────────────────────────────────
+function renderTeamFilters() {
+  const depts = ['all', 'Creative', 'Strategy', 'Accounts', 'Production'];
+  document.getElementById('team-filters').innerHTML = depts.map(d =>
+    `<button class="filter-chip ${state.teamDeptFilter===d?'active':''}" onclick="filterTeam('${d}',this)">${d==='all'?'All':d}</button>`
+  ).join('');
+}
+
+function filterTeam(dept, el) {
+  state.teamDeptFilter = dept;
+  document.querySelectorAll('#team-filters .filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderTeam();
+}
+
+function renderTeam() {
+  const members = state.teamDeptFilter === 'all'
+    ? state.members
+    : state.members.filter(m => m.dept === state.teamDeptFilter);
+  document.getElementById('team-count').textContent = `${members.length} member${members.length!==1?'s':''}`;
+  document.getElementById('team-list').innerHTML = members.map(m => {
+    const mk = MONTHS[state.activeMonthIdx].key;
+    const alloc = allocatedHrsForMember(m.id, mk);
+    const pct = Math.min(Math.round(alloc / m.cap * 100), 100);
+    const color = pct >= 90 ? 'var(--red)' : pct >= 70 ? 'var(--yellow)' : 'var(--green)';
+    const deptKey = m.dept.replace(/\s+/g,'');
+    const projs = state.projects.filter(p => monthInProject(p, mk) && p.assignments.some(a => a.memberId === m.id));
+    return `<div class="team-card">
+      <div class="team-card-header">
+        <div>
+          <div class="team-name">${m.name}</div>
+          <div class="team-role">${m.role}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+          <span class="dept-badge dept-${deptKey}">${m.dept}</span>
+          <div style="display:flex;gap:4px;">
+            <button class="btn small" onclick="editMember(${m.id})">Edit</button>
+            <button class="btn small danger" onclick="removeMember(${m.id})">Remove</button>
+          </div>
+        </div>
+      </div>
+      <div class="capacity-bar-wrap">
+        <div class="capacity-bar-label">
+          <span>${alloc}h / ${m.cap}h allocated (${MONTHS[state.activeMonthIdx].label})</span>
+          <span style="color:${color}">${Math.round(alloc/m.cap*100)}%</span>
+        </div>
+        <div class="capacity-bar"><div class="capacity-fill" style="width:${Math.min(pct,100)}%;background:${color}"></div></div>
+      </div>
+      ${projs.length ? `<div style="margin-top:12px;"><div style="font-size:0.65rem;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em;">Active Projects</div><div class="members-list">${projs.map(p=>`<span class="member-chip">${p.name}</span>`).join('')}</div></div>` : ''}
+    </div>`;
+  }).join('') || `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">👤</div>No members. Click "+ Add Member".</div>`;
+}
+
+function editMember(id) {
+  const m = state.members.find(x => x.id === id);
+  state.editingMemberId = id;
+  document.getElementById('member-modal-title').textContent = 'Edit Team Member';
+  document.getElementById('mem-name').value = m.name;
+  document.getElementById('mem-role').value = m.role;
+  document.getElementById('mem-dept').value = m.dept;
+  document.getElementById('mem-cap').value = m.cap;
+  openModal('member');
+}
+
+function removeMember(id) {
+  state.members = state.members.filter(m => m.id !== id);
+  state.projects.forEach(p => { p.assignments = p.assignments.filter(a => a.memberId !== id); });
+  saveState();
+  renderAll();
+}
+
+// ─── MODALS ──────────────────────────────────────────────────────────────────
+function openModal(type) {
+  if (type === 'project') {
+    if (!state.editingProjectId) {
+      document.getElementById('project-modal-title').textContent = 'New Project';
+      document.getElementById('proj-name').value = '';
+      document.getElementById('proj-start').value = '';
+      document.getElementById('proj-end').value = '';
+      document.getElementById('proj-status').value = 'pitched';
+      buildAssignSection([]);
+    }
+  }
+  if (type === 'member' && !state.editingMemberId) {
+    document.getElementById('mem-name').value = '';
+    document.getElementById('mem-role').value = '';
+    document.getElementById('mem-dept').value = 'Creative';
+    document.getElementById('mem-cap').value = '160';
+  }
+  if (type === 'apikey') {
+    const existing = getApiKey();
+    document.getElementById('apikey-input').value = existing ? existing : '';
+    document.getElementById('apikey-status').textContent = existing ? '✓ Key is set — you can update or clear it.' : '';
+    document.getElementById('apikey-status').style.color = 'var(--muted)';
+  }
+  document.getElementById(`modal-${type}`).classList.add('open');
+}
+
+function closeModal(type) {
+  document.getElementById(`modal-${type}`).classList.remove('open');
+  if (type === 'project') state.editingProjectId = null;
+  if (type === 'member') {
+    state.editingMemberId = null;
+    document.getElementById('member-modal-title').textContent = 'Add Team Member';
+  }
+  if (type === 'gsheets') {
+    document.getElementById('gsheet-url').value = '';
+    document.getElementById('gsheet-status').textContent = '';
+  }
+  if (type === 'sheets') {
+    document.getElementById('sheets-url-input').value = getSheetsUrl();
+    document.getElementById('sheets-status').textContent = '';
+  }
+  if (type === 'apikey') {
+    document.getElementById('apikey-status').textContent = '';
+  }
+}
+
+function buildAssignSection(existing = []) {
+  const wrap = document.getElementById('proj-members-assign');
+  if (!state.members.length) {
+    wrap.innerHTML = '';
+    document.getElementById('no-members-note').textContent = 'Add team members first on the Team tab.';
+    return;
+  }
+  document.getElementById('no-members-note').textContent = '';
+
+  // Header row: month labels
+  const monthHeaders = MONTHS.map(m => `<th style="padding:4px 6px;font-size:0.62rem;color:var(--muted);font-weight:400;white-space:nowrap;text-align:center;">${m.label}</th>`).join('');
+
+  const memberRows = state.members.map(m => {
+    const ex = existing.find(a => a.memberId === m.id);
+    const checked = ex ? 'checked' : '';
+    const roleVal = ex ? (ex.role || '') : '';
+    const monthInputs = MONTHS.map(mo => {
+      const hrs = (ex && ex.monthlyHours && ex.monthlyHours[mo.key] != null)
+        ? ex.monthlyHours[mo.key]
+        : (ex && !ex.monthlyHours && ex.hoursPerMonth ? ex.hoursPerMonth : '');
+      return `<td style="padding:2px 3px;"><input type="number" id="mhrs-${m.id}-${mo.key}" value="${hrs}" min="0" max="300" placeholder="—"
+        style="width:46px;padding:4px 5px;background:var(--surface);border:2px solid var(--border);color:var(--text);font-family:'Space Mono',monospace;font-size:0.68rem;text-align:center;"
+        ${ex ? '' : 'disabled'}
+        oninput="syncCheckbox(${m.id})"></td>`;
+    }).join('');
+    return `<tr id="assignrow-${m.id}" style="border-bottom:1px solid var(--border);">
+      <td style="padding:8px 6px;min-width:160px;">
+        <label style="font-size:0.75rem;display:flex;align-items:center;gap:7px;cursor:pointer;font-family:'Space Mono',monospace;">
+          <input type="checkbox" id="chk-${m.id}" ${checked} style="accent-color:var(--text)" onchange="toggleMemberRow(${m.id})">
+          <span style="color:var(--text)">${m.name}<br><span style="color:var(--muted);font-size:0.62rem;text-transform:uppercase;letter-spacing:0.05em;">${m.dept}</span></span>
+        </label>
+      </td>
+      <td style="padding:4px 6px;">
+        <input type="text" id="role-${m.id}" class="form-input" placeholder="Role" value="${roleVal}"
+          style="font-size:0.68rem;padding:4px 8px;width:130px;" ${ex ? '' : 'disabled'}>
+      </td>
+      ${monthInputs}
+    </tr>`;
+  }).join('');
+
+  wrap.innerHTML = `<div style="overflow-x:auto;">
+    <table style="border-collapse:collapse;width:100%;font-size:0.72rem;">
+      <thead>
+        <tr>
+          <th style="padding:4px 6px;text-align:left;color:var(--muted);font-weight:400;font-size:0.62rem;">Member</th>
+          <th style="padding:4px 6px;text-align:left;color:var(--muted);font-weight:400;font-size:0.62rem;">Role</th>
+          ${monthHeaders}
+        </tr>
+      </thead>
+      <tbody>${memberRows}</tbody>
+    </table>
+  </div>`;
+}
+
+function toggleMemberRow(memberId) {
+  const checked = document.getElementById(`chk-${memberId}`).checked;
+  const roleInput = document.getElementById(`role-${memberId}`);
+  if (roleInput) roleInput.disabled = !checked;
+  MONTHS.forEach(mo => {
+    const inp = document.getElementById(`mhrs-${memberId}-${mo.key}`);
+    if (inp) inp.disabled = !checked;
+  });
+}
+
+function syncCheckbox(memberId) {
+  // Auto-check the member if any hours are entered
+  const hasHours = MONTHS.some(mo => {
+    const v = document.getElementById(`mhrs-${memberId}-${mo.key}`)?.value;
+    return v && parseInt(v) > 0;
+  });
+  if (hasHours) document.getElementById(`chk-${memberId}`).checked = true;
+}
+
+function saveProject() {
+  const name = document.getElementById('proj-name').value.trim();
+  if (!name) return alert('Project name required');
+  const assignments = state.members
+    .filter(m => document.getElementById(`chk-${m.id}`)?.checked)
+    .map(m => {
+      const monthlyHours = {};
+      MONTHS.forEach(mo => {
+        const v = parseInt(document.getElementById(`mhrs-${m.id}-${mo.key}`)?.value);
+        if (v > 0) monthlyHours[mo.key] = v;
+      });
+      return {
+        memberId: m.id,
+        role: document.getElementById(`role-${m.id}`)?.value || '',
+        monthlyHours,
+        hoursPerMonth: Object.keys(monthlyHours).length
+          ? Math.round(Object.values(monthlyHours).reduce((s,v)=>s+v,0) / Object.keys(monthlyHours).length)
+          : 0,
+      };
+    });
+  const proj = {
+    id: state.editingProjectId || state.nextProjectId++,
+    name,
+    start: document.getElementById('proj-start').value,
+    end: document.getElementById('proj-end').value,
+    status: document.getElementById('proj-status').value,
+    assignments,
+  };
+  if (state.editingProjectId) {
+    state.projects = state.projects.map(p => p.id === state.editingProjectId ? proj : p);
+  } else {
+    state.projects.push(proj);
+  }
+  closeModal('project');
+  saveState();
+  renderAll();
+}
+
+function saveMember() {
+  const name = document.getElementById('mem-name').value.trim();
+  if (!name) return alert('Name required');
+  const data = {
+    name,
+    role: document.getElementById('mem-role').value,
+    dept: document.getElementById('mem-dept').value,
+    cap: parseInt(document.getElementById('mem-cap').value) || 160,
+  };
+  if (state.editingMemberId) {
+    state.members = state.members.map(m => m.id === state.editingMemberId ? { ...m, ...data } : m);
+  } else {
+    state.members.push({ id: state.nextMemberId++, ...data });
+  }
+  closeModal('member');
+  saveState();
+  renderAll();
+}
+
+// ─── MONDAY ──────────────────────────────────────────────────────────────────
+function embedMonday() {
+  const url = document.getElementById('monday-url').value.trim();
+  if (!url) return;
+  document.getElementById('monday-embed-wrap').innerHTML =
+    `<iframe src="${url}" class="monday-embed" allowfullscreen></iframe>`;
+}
+function openMonday(url) {
+  const u = url || document.getElementById('monday-url').value.trim() || 'https://monday.com';
+  window.open(u, '_blank');
+}
+
+// ─── EXPORT CSV ──────────────────────────────────────────────────────────────
+function exportCSV() {
+  const rows = [['Member','Department','Role','Month','Capacity (hrs)','Allocated (hrs)','Remaining (hrs)','Utilization %']];
+  state.members.forEach(m => {
+    MONTHS.forEach(mo => {
+      const alloc = allocatedHrsForMember(m.id, mo.key);
+      rows.push([m.name, m.dept, m.role, mo.label, m.cap, alloc, m.cap-alloc, Math.round(alloc/m.cap*100)+'%']);
+    });
+  });
+  const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'capacity-plan.csv';
+  a.click();
+}
+
+// ─── PERSISTENCE: GOOGLE SHEETS + LOCALSTORAGE CACHE ─────────────────────────
+const STORAGE_KEY = 'capplan_state_v1';
+const SHEETS_URL_KEY = 'capplan_sheets_url';
+const SHEETS_URL_DEFAULT = 'https://script.google.com/macros/s/AKfycbwN5LHOR82FbV-TZGawFwnpirQbpQRt3SwCQdktwQ1nFGhFtE6CBUDK8gUaT9OexOXe/exec';
+
+function getSheetsUrl() {
+  // Always prefer the baked-in default — localStorage override only if explicitly set after default
+  const stored = localStorage.getItem(SHEETS_URL_KEY);
+  return (stored && stored !== '' && stored !== 'undefined') ? stored : SHEETS_URL_DEFAULT;
+}
+function setSheetsUrl(url) {
+  localStorage.setItem(SHEETS_URL_KEY, url.trim());
+}
+
+// Clear any stale localStorage URL that might be overriding the baked default
+(function() {
+  const stored = localStorage.getItem(SHEETS_URL_KEY);
+  if (!stored || stored === 'undefined' || stored === '') {
+    localStorage.removeItem(SHEETS_URL_KEY);
+  }
+})();
+
+// Save to localStorage immediately (fast), then sync to Sheets in background
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      members: state.members,
+      projects: state.projects,
+      nextMemberId: state.nextMemberId,
+      nextProjectId: state.nextProjectId,
+    }));
+  } catch(e) { console.warn('localStorage save failed:', e); }
+  syncToSheets();
+}
+
+// Load from localStorage first (instant), then fetch fresh from Sheets
+function migrateDeptNames(data) {
+  if (data.members) data.members.forEach(m => {
+    if (m.dept === 'Account Management') m.dept = 'Accounts';
+  });
+  return data;
+}
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const data = migrateDeptNames(JSON.parse(saved));
+      if (data.members) state.members = data.members;
+      if (data.projects) state.projects = data.projects;
+      if (data.nextMemberId) state.nextMemberId = data.nextMemberId;
+      if (data.nextProjectId) state.nextProjectId = data.nextProjectId;
+    }
+  } catch(e) { console.warn('localStorage load failed:', e); }
+  // Then fetch live from Sheets in background
+  fetchFromSheets();
+}
+
+// ─── SHEETS SYNC ─────────────────────────────────────────────────────────────
+let syncTimeout = null;
+let syncStatus = 'idle'; // idle | syncing | ok | error
+
+function setSyncIndicator(status, msg) {
+  syncStatus = status;
+  const el = document.getElementById('sync-indicator');
+  if (!el) return;
+  const map = {
+    idle:    { text: '○ Sheets',         color: 'var(--muted)' },
+    syncing: { text: '↻ Syncing…',       color: 'var(--yellow)' },
+    ok:      { text: '✓ Sheets Saved',   color: 'var(--green)' },
+    error:   { text: '✗ Sheets Error',   color: 'var(--red)' },
+    nourl:   { text: '○ Sheets (not set)', color: 'var(--muted)' },
+  };
+  const s = map[status] || map.idle;
+  el.textContent = msg || s.text;
+  el.style.color = s.color;
+}
+
+async function syncToSheets() {
+  const url = getSheetsUrl();
+  if (!url) { setSyncIndicator('nourl'); return; }
+  clearTimeout(syncTimeout);
+  syncTimeout = setTimeout(async () => {
+    setSyncIndicator('syncing');
+    try {
+      const payload = JSON.stringify({
+        action: 'save',
+        data: {
+          members: state.members,
+          projects: state.projects,
+          nextMemberId: state.nextMemberId,
+          nextProjectId: state.nextProjectId,
+        }
+      });
+      // no-cors: Google Apps Script blocks CORS headers on POST responses
+      // but the write still succeeds server-side. We optimistically mark ok.
+      await fetch(url, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: payload,
+      });
+      setSyncIndicator('ok');
+    } catch(err) {
+      console.warn('Sheets sync error:', err);
+      setSyncIndicator('error', '✗ ' + err.message.slice(0, 40));
+    }
+  }, 800); // debounce — wait 800ms after last change before writing
+}
+
+async function fetchFromSheets() {
+  const url = getSheetsUrl();
+  if (!url) { setSyncIndicator('nourl'); return; }
+  setSyncIndicator('syncing', '↻ Loading from Sheets…');
+  try {
+    const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url + '?action=load');
+    const res = await fetch(proxy);
+    const wrapper = await res.json();
+    const json = JSON.parse(wrapper.contents);
+    if (json.status === 'ok' && json.data) {
+      const data = migrateDeptNames(typeof json.data === 'string' ? JSON.parse(json.data) : json.data);
+      if (data.members) state.members = data.members;
+      if (data.projects) state.projects = data.projects;
+      if (data.nextMemberId) state.nextMemberId = data.nextMemberId;
+      if (data.nextProjectId) state.nextProjectId = data.nextProjectId;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      renderAll();
+      setSyncIndicator('ok', '✓ Loaded from Sheets');
+    } else {
+      setSyncIndicator('nourl', '○ No data yet in Sheet');
+    }
+  } catch(err) {
+    console.warn('Sheets fetch error:', err);
+    setSyncIndicator('error', '✗ Could not load from Sheets');
+  }
+}
+
+// ─── API KEY ──────────────────────────────────────────────────────────────────
+const API_KEY_STORAGE = 'capplan_anthropic_key';
+
+function getApiKey() {
+  return localStorage.getItem(API_KEY_STORAGE) || '';
+}
+
+function saveApiKey() {
+  const key = document.getElementById('apikey-input').value.trim();
+  if (!key.startsWith('sk-ant-')) {
+    document.getElementById('apikey-status').style.color = 'var(--red)';
+    document.getElementById('apikey-status').textContent = 'Key should start with sk-ant-…';
+    return;
+  }
+  localStorage.setItem(API_KEY_STORAGE, key);
+  updateApiKeyIndicator();
+  document.getElementById('apikey-status').style.color = 'var(--green)';
+  document.getElementById('apikey-status').textContent = '✓ Key saved.';
+  setTimeout(() => closeModal('apikey'), 800);
+}
+
+function clearApiKey() {
+  localStorage.removeItem(API_KEY_STORAGE);
+  document.getElementById('apikey-input').value = '';
+  document.getElementById('apikey-status').style.color = 'var(--muted)';
+  document.getElementById('apikey-status').textContent = 'Key cleared.';
+  updateApiKeyIndicator();
+}
+
+function updateApiKeyIndicator() {
+  const btn = document.getElementById('api-key-btn');
+  if (!btn) return;
+  const hasKey = !!getApiKey();
+  btn.style.background = hasKey ? 'var(--accent)' : '';
+  btn.style.borderColor = hasKey ? 'var(--text)' : '';
+  btn.textContent = hasKey ? '✓ API Key' : '⚙ API Key';
+}
+
+
+async function handlePDF(e) {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+
+  const statusEl = document.getElementById('pdf-status');
+  statusEl.style.color = 'var(--muted)';
+  statusEl.textContent = '⏳ Reading PDF…';
+  openModal('pdf');
+
+  try {
+    const base64 = await new Promise((res, rej) => {
+      const reader = new FileReader();
+      reader.onload = () => res(reader.result.split(',')[1]);
+      reader.onerror = () => rej(new Error('Could not read file'));
+      reader.readAsDataURL(file);
+    });
+
+    statusEl.textContent = '⏳ Claude is parsing the staff plan…';
+
+    const apiKey = getApiKey();
+    const headers = { 'Content-Type': 'application/json' };
+    if (apiKey) {
+      headers['x-api-key'] = apiKey;
+      headers['anthropic-version'] = '2023-06-01';
+      headers['anthropic-dangerous-direct-browser-access'] = 'true';
+    }
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'document',
+              source: { type: 'base64', media_type: 'application/pdf', data: base64 }
+            },
+            {
+              type: 'text',
+              text: `Extract all team members AND projects from this staff plan PDF.
+
+Return ONLY a single JSON object with two keys: "members" and "projects". No markdown, no explanation, no extra text.
+
+"members" is an array of objects with:
+- "name": full name (string)
+- "dept": one of exactly ["Creative", "Strategy", "Accounts", "Production"] — pick closest match
+- "role": job title (string)
+- "cap": total monthly capacity in hours as a number (default 160 if not specified)
+
+"projects" is an array of objects with:
+- "name": the project name ONLY — do not include client name, labels like "client", or any suffix. Just the clean project name.
+- "start": start date as "YYYY-MM-DD"
+- "end": end date as "YYYY-MM-DD"
+- "status": one of "active", "pitched", or "complete"
+- "assignments": array of objects with:
+  - "memberName": the team member's full name exactly as listed in members (string)
+  - "role": their role on this specific project (string)
+  - "monthlyHours": an object where each key is "YYYY-MM" and the value is the exact hours for that month. Only include months where this person has hours > 0. Example: {"2026-03": 11, "2026-04": 8}
+
+Be precise — extract the actual per-month hours from the document exactly as they appear. Do not average or estimate if real numbers are present.
+
+Example:
+{
+  "members": [{"name":"Jane Smith","dept":"Creative","role":"Art Director","cap":160}],
+  "projects": [{"name":"Brand Campaign","start":"2026-03-01","end":"2026-06-30","status":"active","assignments":[{"memberName":"Jane Smith","role":"Lead AD","monthlyHours":{"2026-03":11,"2026-04":8}}]}]
+}
+
+Return only the JSON object.`
+            }
+          ]
+        }]
+      })
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) throw new Error('Invalid or missing API key. Click "⚙ API Key" in the top nav to add yours.');
+      throw new Error(`API error ${response.status}`);
+    }
+    const data = await response.json();
+    const text = data.content.map(b => b.text || '').join('').trim();
+    const clean = text.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+
+    const validDepts = ['Creative','Strategy','Accounts','Production'];
+    const validStatuses = ['active','pitched','complete'];
+    let membersAdded = 0, membersUpdated = 0, projectsAdded = 0, projectsUpdated = 0;
+
+    // --- Process members first so we can look up IDs for projects
+    (parsed.members || []).forEach(p => {
+      const name = (p.name || '').trim();
+      if (!name) return;
+      const dept = validDepts.includes(p.dept) ? p.dept : 'Creative';
+      const role = (p.role || '').trim();
+      const cap = parseInt(p.cap) || 160;
+      const exists = state.members.find(m => m.name.toLowerCase() === name.toLowerCase());
+      if (exists) {
+        exists.dept = dept; exists.role = role || exists.role; exists.cap = cap;
+        membersUpdated++;
+      } else {
+        state.members.push({ id: state.nextMemberId++, name, role, dept, cap });
+        membersAdded++;
+      }
+    });
+
+    // --- Process projects, resolving member names → IDs
+    (parsed.projects || []).forEach(p => {
+      // Strip trailing "client" label and trim
+      const name = (p.name || '').replace(/\s*client\s*$/i, '').trim();
+      if (!name) return;
+      const status = validStatuses.includes(p.status) ? p.status : 'active';
+      const assignments = (p.assignments || []).map(a => {
+        const member = state.members.find(m => m.name.toLowerCase() === (a.memberName || '').toLowerCase());
+        if (!member) return null;
+        // Support both monthlyHours map (new) and hoursPerMonth flat (legacy fallback)
+        const monthlyHours = (a.monthlyHours && typeof a.monthlyHours === 'object')
+          ? a.monthlyHours
+          : {};
+        return {
+          memberId: member.id,
+          role: (a.role || '').trim(),
+          monthlyHours,
+          // Keep flat hoursPerMonth as fallback = average of monthlyHours values or legacy value
+          hoursPerMonth: Object.keys(monthlyHours).length
+            ? Math.round(Object.values(monthlyHours).reduce((s,v)=>s+v,0) / Object.keys(monthlyHours).length)
+            : (parseInt(a.hoursPerMonth) || 20),
+        };
+      }).filter(Boolean);
+
+      const exists = state.projects.find(x => x.name.toLowerCase() === name.toLowerCase());
+      if (exists) {
+        exists.start = p.start || exists.start;
+        exists.end = p.end || exists.end;
+        exists.status = status;
+        exists.assignments = assignments;
+        projectsUpdated++;
+      } else {
+        state.projects.push({
+          id: state.nextProjectId++,
+          name,
+          start: p.start || '',
+          end: p.end || '',
+          status,
+          assignments,
+        });
+        projectsAdded++;
+      }
+    });
+
+    saveState();
+    renderAll();
+    statusEl.style.color = 'var(--green)';
+    statusEl.textContent = `✓ Done — ${membersAdded} member(s) added, ${membersUpdated} updated · ${projectsAdded} project(s) added, ${projectsUpdated} updated.`;
+
+  } catch(err) {
+    statusEl.style.color = 'var(--red)';
+    statusEl.textContent = `Error: ${err.message}`;
+  }
+}
+
+// ─── SHEETS URL MANAGEMENT ───────────────────────────────────────────────────
+function saveSheetsUrl() {
+  const url = document.getElementById('sheets-url-input').value.trim();
+  const statusEl = document.getElementById('sheets-status');
+  if (!url || !url.includes('script.google.com')) {
+    statusEl.style.color = 'var(--red)';
+    statusEl.textContent = 'Please paste a valid Google Apps Script Web App URL.';
+    return;
+  }
+  setSheetsUrl(url);
+  statusEl.style.color = 'var(--green)';
+  statusEl.textContent = '✓ Saved! Syncing data now…';
+  setSyncIndicator('syncing');
+  // Push current data up, then pull fresh
+  syncToSheets().then ? null : null;
+  setTimeout(() => {
+    fetchFromSheets().then(() => closeModal('sheets'));
+  }, 1200);
+}
+
+async function testSheetsConnection() {
+  const url = document.getElementById('sheets-url-input').value.trim();
+  const statusEl = document.getElementById('sheets-status');
+  if (!url) { statusEl.style.color = 'var(--red)'; statusEl.textContent = 'Paste a URL first.'; return; }
+  statusEl.style.color = 'var(--muted)'; statusEl.textContent = '↻ Testing connection…';
+  try {
+    const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url + '?action=load');
+    const res = await fetch(proxy);
+    const wrapper = await res.json();
+    const json = JSON.parse(wrapper.contents);
+    if (json.status === 'ok') {
+      statusEl.style.color = 'var(--green)';
+      statusEl.textContent = '✓ Connection works! ' + (json.data ? 'Existing data found.' : 'No data yet — will write on first save.');
+    } else {
+      throw new Error(json.error || 'Script returned an error');
+    }
+  } catch(err) {
+    statusEl.style.color = 'var(--red)';
+    statusEl.textContent = '✗ ' + err.message.slice(0, 100);
+  }
+}
+
+// ─── PAGE NAV ─────────────────────────────────────────────────────────────────
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  event.target.classList.add('active');
+  renderAll();
+}
+
+// ─── RENDER ALL ──────────────────────────────────────────────────────────────
+function renderAll() {
+  renderStats();
+  renderMonthChips();
+  renderOverviewTable();
+  renderHeatmapFilters();
+  renderHeatmap();
+  renderProjects();
+  renderTeamFilters();
+  renderTeam();
+}
+
+// close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+});
+
+loadState();
+updateApiKeyIndicator();
+renderAll();
+</script>
+</body>
+</html>
